@@ -330,9 +330,10 @@
     <main>
       <div id="chat-container">
         <div class="message ai-message">
-          Hello! I am your AgroMart AI assistant. I can help you with
-          agricultural questions based on your uploaded PDF documents. How can I
-          assist you today?
+          Hello! I am your AgroMart AI assistant. I can help you with questions 
+          specifically regarding <span class="highlight-text">Apple</span> and 
+          <span class="highlight-text">Cabbage</span> cultivation based 
+          on our official guides. How can I assist you today?
         </div>
       </div>
 
@@ -401,9 +402,15 @@
           '<span class="highlight-source">$1</span>',
         );
 
-        // Replace bold **text** with highlights
+        // Replace bold **text** with highlights (fallback)
         html = html.replace(
           /\*\*(.*?)\*\*/g,
+          '<span class="highlight-text">$1</span>',
+        );
+
+        // Style <b> tags with the highlight-text class if the AI uses them
+        html = html.replace(
+          /<b>(.*?)<\/b>/g,
           '<span class="highlight-text">$1</span>',
         );
 

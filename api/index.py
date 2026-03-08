@@ -1,4 +1,5 @@
 import os
+import json
 import sys
 import glob
 import numpy as np
@@ -18,9 +19,12 @@ load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Set base path for data folder relative to this file
-# In Vercel, the directory structure is preserved
+# In local development, we search for 'data' in parent or current dir
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "..", "data")
+if os.path.exists(os.path.join(BASE_DIR, "..", "data")):
+    DATA_DIR = os.path.join(BASE_DIR, "..", "data")
+else:
+    DATA_DIR = os.path.join(BASE_DIR, "data")
 
 # Models
 EMBEDDING_MODEL = "models/gemini-embedding-001"
@@ -32,13 +36,25 @@ client = genai.Client(api_key=API_KEY) if API_KEY else None
 # Global memory for RAG
 knowledge_base = []
 
+KB_JSON_PATH = os.path.join(DATA_DIR, "knowledge_base.json")
+
 def load_knowledge_base():
-    """Reads all PDFs in the data directory and generates embeddings."""
+    """Reads knowledge base from JSON if exists, otherwise from PDFs."""
     global knowledge_base
     if knowledge_base:
         return
-    knowledge_base = []
     
+    # Try loading from JSON first
+    if os.path.exists(KB_JSON_PATH):
+        print(f"Loading knowledge base from {KB_JSON_PATH}...")
+        try:
+            with open(KB_JSON_PATH, "r", encoding="utf-8") as f:
+                knowledge_base = json.load(f)
+            print(f"Successfully loaded {len(knowledge_base)} chunks from JSON.")
+            return
+        except Exception as e:
+            print(f"Error loading JSON knowledge base: {e}. Falling back to PDF processing.")
+
     if not os.path.exists(DATA_DIR):
         print(f"Error: Data directory '{DATA_DIR}' not found.")
         return
@@ -144,14 +160,14 @@ async def chat(request: ChatRequest):
         context = find_context(request.message)
         
         system_prompt = f"""
-You are **AgroMart AI**, an expert agricultural assistant.
+You are **AgroMart AI**, an expert agricultural assistant specialized in **Apple** and **Cabbage** cultivation.
 
 RESPONSE PROTOCOL:
-1. Greetings: Respond warmly.
+1. Greetings: Respond warmly, mentioning your expertise in Apple and Cabbage.
 2. Context-Based: Use ONLY provided context for technical info.
 3. Sources: Use "According to our official guides...".
 4. No Context: Say you don't have that info in the guides.
-5. Formatting: Use bold text for key points. No ***.
+5. Formatting: Use <b>bold text</b> for key points. Do not use **.
 
 DATABASE CONTEXT:
 {context if context else "No relevant data found."}
@@ -178,3 +194,8 @@ DATABASE CONTEXT:
 @app.get("/api/health")
 async def root():
     return {"status": "running", "chunks": len(knowledge_base)}
+
+if __name__ == "__main__":
+    import uvicorn
+    # Local run logic
+    uvicorn.run(app, host="0.0.0.0", port=8001)
