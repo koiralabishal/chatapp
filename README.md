@@ -45,12 +45,12 @@ A premium, production-ready Chat Application that uses **Retrieval-Augmented Gen
    GEMINI_API_KEY=your_api_key_here
    ```
 
-## 🏃 Local Development
+## 🏃 Local and VercelDevelopment
 
 1. **Start the Backend**:
 
    ```bash
-   python main_pdf_rag.py
+   python api/index.py
    ```
 
    _The server will run at `http://127.0.0.1:8001`._
@@ -69,7 +69,7 @@ A premium, production-ready Chat Application that uses **Retrieval-Augmented Gen
 - `/api`: Vercel serverless function entry point (`index.py`).
 - `/public`: Frontend assets (`index.html`).
 - `/data`: Place your PDF guides here.
-- `main_pdf_rag.py`: Main script for local development.
+- `api/index.py`: Main script for local and vercel development.
 - `vercel.json`: Deployment configuration.
 
 ## 📄 License
